@@ -12,15 +12,15 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import modelo.Producto;
-import modelo.RegistroProducto;
+import modelo.Registro;
+import modelo.Listado;
 
 /**
  *
- * @author yayi
+ * @author pipe
  */
-@WebServlet(name = "listarProductoServlet", urlPatterns = {"/listarProductoServlet"})
-public class listarProductoServlet extends HttpServlet {
+@WebServlet(name = "ListarRegistroServlet", urlPatterns = {"/ListarRegistroServlet"})
+public class ListarRegistroServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -39,10 +39,10 @@ public class listarProductoServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet listarProductoServlet</title>");
+            out.println("<title>Servlet ListarRegistroServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet listarProductoServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet ListarRegistroServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -74,18 +74,17 @@ public class listarProductoServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
+        
         response.setContentType("text/html;charset=UTF-8");
-
+        
         int codigo = Integer.parseInt(request.getParameter("codigo"));
-
-        Producto productoBorrar = RegistroProducto.buscarProducto(codigo);
-
-        RegistroProducto.eliminarProducto(productoBorrar);
-
-        request.setAttribute("mensaje", "Se ha eliminado el Producto");
-
-        request.getRequestDispatcher("/listarProducto.jsp").forward(request, response);
+        Registro registroEliminar = Listado.buscarRegistro(codigo);
+        Listado.eliminarRegistro(registroEliminar);
+        
+        request.setAttribute("mensaje", "Se ha eliminado el nacimiento correctamente");
+        request.getRequestDispatcher("/listarRegistros.jsp").forward(request, response);
+        
+        
     }
 
     /**
@@ -97,5 +96,4 @@ public class listarProductoServlet extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
-
 }

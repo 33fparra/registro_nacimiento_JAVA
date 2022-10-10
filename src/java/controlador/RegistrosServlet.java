@@ -5,14 +5,13 @@
  */
 package controlador;
 
-import static com.sun.xml.ws.security.addressing.impl.policy.Constants.logger;
 import java.io.IOException;
 import java.io.PrintWriter;
+import static java.time.Instant.now;
 import java.util.ArrayList;
-import java.util.logging.FileHandler;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -20,18 +19,18 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import modelo.Producto;
-import modelo.RegistroProducto;
+import modelo.Listado;
+import modelo.Registro;
 
 /**
  *
- * @author yayi
+ * @author pipe
  */
-@WebServlet(name = "agregarProductoServlet", urlPatterns = {"/agregarProductoServlet"})
-public class agregarProductoServlet extends HttpServlet {
-    private final static Logger LOG = Logger.getLogger(agregarProductoServlet.class.getName());
+@WebServlet(name = "RegistrosServlet", urlPatterns = {"/RegistrosServlet"})
+public class RegistrosServlet extends HttpServlet {
+    private final static Logger LOG = Logger.getLogger(RegistrosServlet.class.getName());
     
-    
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -49,10 +48,10 @@ public class agregarProductoServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet agregarProductoServlet</title>");
+            out.println("<title>Servlet RegistrosServlet</title>");            
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet agregarProductoServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet RegistrosServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -84,108 +83,94 @@ public class agregarProductoServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        int codigo = 0, precio = 0, cc = 0;
-        ArrayList<String> errores = new ArrayList<String>();
-        String respuesta;
-
         response.setContentType("text/html;charset=UTF-8");
-
-        //recibir parámetros
-        String codigoP = request.getParameter("codigo");
-        String descripcion = request.getParameter("descripcion");
-        String categoria = request.getParameter("categoria");
-        String precioP = request.getParameter("precio");
-        String ccP = request.getParameter("cc");
-
-        //validar parámetros
-        if (codigoP.isEmpty()) {
-            errores.add("Ingrese código");
+        
+        String respuesta;
+        ArrayList<String> errores = new ArrayList<String>();
+        
+        //Recibiendo parametros
+        int id = 0, peso = 0, centro = 0;
+        String nombre = request.getParameter("nombre");
+        String centroP = request.getParameter("centro");
+        
+        
+        Date fecha = new Date();
+        
+        
+        boolean prematuro = false;
+        char sex = ' ';
+        if("f".equals(request.getParameter("sexo"))){sex = 'F';}
+        if("m".equals(request.getParameter("sexo"))){sex = 'M';}
+        if("Si".equals(request.getParameter("prematuro"))){prematuro = true;}
+        if("No".equals(request.getParameter("prematuro"))){prematuro = false;}
+        
+        
+        
+        //Validadores
+        try{
+            id = Integer.parseInt(request.getParameter("id"));
         }
-
-        if (descripcion.isEmpty()) {
-            errores.add("Ingrese descripción");
+        catch(Exception e){
+            errores.add("Debe ingresar id");
+            //validar numero
         }
-
-        if (categoria.equals("Seleccione")) {
-            errores.add("Seleccione categoría");
+        
+        if (nombre.isEmpty()) {
+            errores.add("Debe ingresar nombre");
         }
-
-        if (precioP.isEmpty()) {
-            errores.add("Ingrese precio");
+        try{
+            peso = Integer.parseInt(request.getParameter("peso"));
         }
-
-        if (ccP.isEmpty()) {
-            errores.add("Ingrese cc");
+        catch(Exception e){
+            errores.add("Debe ingresar peso");
+            //Validar numero
         }
-
-        try {
-            codigo = Integer.parseInt(codigoP);
-        } catch (Exception e) {
-            errores.add("El código debe ser un número");
+        if (centroP.equals("Seleccione")) {
+            errores.add("Debe ingresar centro");
+        }else{
+            centro = Integer.parseInt(centroP);
         }
-
-        try {
-            precio = Integer.parseInt(precioP);
-        } catch (Exception e) {
-            errores.add("El precio debe ser un número");
-        }
-
-        try {
-            cc = Integer.parseInt(ccP);
-        } catch (Exception e) {
-            errores.add("cc debe ser un número");
-        }
-
-        if (codigo <= 0) {
-            errores.add("El código debe ser mayor a 0");
-        }
-        if (precio <= 0) {
-            errores.add("El precio debe ser mayor a 0");
-        }
-        if (cc <= 0) {
-            errores.add("cc debe ser mayor a 0");
-        }
-        descripcion = descripcion.toUpperCase();
-        categoria = categoria.toUpperCase();
-    
-
-        //ejecutar lógica de negocio
+        
+        
+        //Logica de negocio
         if (errores.size() == 0) {
-            Producto productito = new Producto(codigo, descripcion, categoria, precio, cc);
-
-            // agregar mensaje a la session
+            Registro reg = new Registro(
+                id,
+                peso,
+                centro,
+                nombre,
+                fecha,
+                prematuro,
+                sex
+            );
             HttpSession session = request.getSession();
-            RegistroProducto registroProd = (RegistroProducto) session.getAttribute("registro");
-            if (registroProd == null) {
-                registroProd = new RegistroProducto();
-                session.setAttribute("registro", registroProd);
-            }
-            registroProd.agregarProducto(productito);
+            Listado listado = (Listado) session.getAttribute("listado");
             
-            respuesta = "Tu Producto se ingresó exitosamente";
+            if (listado == null) {
+                listado = new Listado();
+                session.setAttribute("listado", listado);
+            }
+            listado.agregarRegistro(reg);
+            respuesta = "Se ha registrado el nacimiento correctamente";
             
             LOG.log(Level.INFO, "Proceso exitoso", request);
             
         } else {
-            respuesta = "Tu Producto no se ingresó";
-            
+            respuesta = "No se ha podido registrar el nacimiento";
             LOG.log(Level.SEVERE, "Proceso NO exitoso");
         }
-
-        //despachar vista
+        
+        
+        
+        //Despachar vista
         request.setAttribute("respuesta", respuesta);
         request.setAttribute("error", errores);
-
+        
         RequestDispatcher despachador = request.getRequestDispatcher("/index.jsp");
-        despachador.forward(request, response);
+        despachador.forward(request, response);  
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
+    
     @Override
     public String getServletInfo() {
         return "Short description";
